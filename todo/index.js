@@ -1,5 +1,5 @@
 'use strict';
-// { name: name of task, isDone: truth value whether complted }
+// { name: name of task, isDone: truth value whether completed }
 const tasks = [];
 /**
  * adding task
