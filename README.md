@@ -1,6 +1,6 @@
 # Asking meaning
 
-- **"mea <word>"** This command will shows you the meaning of selected word.
+- **"mea (word)"** This command will shows you the meaning of selected word.
 
 # Creating meaning
 
@@ -8,7 +8,7 @@
 
 # Updateing meaning 
 
-- **"update <word>"** This command will update meaning, synonyms and URL, which is linked with particular word. 
+- **"update (word)"** This command will update meaning, synonyms and URL, which is linked with particular word. 
 
 - If you acclimate above 3 main command, you'll manipulate this Slack bot application.
 
@@ -16,4 +16,4 @@
 
 - **"/listchannel"** This slash slash command will shows you the list of channellinks with browser links.
 
-- **"share <channel name>"** This commmand will enable you to share content of other channel by shareing the latest message in selected channel.
+- **"share (channel name)"** This commmand will enable you to share content of other channel by shareing the latest message in selected channel.
