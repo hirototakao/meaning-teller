@@ -14,6 +14,6 @@
 
 # Other function
 
-- **"/listchannel"** This slash slash command will shows you the list of channellinks with browser links.
+- **"/listchannel"** This slash slash command will shows you the list of formatted channelinks with browser links.
 
 - **"share (channel name)"** This commmand will enable you to share content of other channel by shareing the latest message in selected channel.
