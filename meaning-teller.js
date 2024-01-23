@@ -138,29 +138,16 @@ const app = new bolt.App(
       });
       
        //listing-channel function
-       app.command('/listchannel', async({ack, say}) => {
+       app.command('/listchannel', async({ack, command}) => {
           await ack();
-          const conversationLists = await app.client.conversations.list({
-            token: process.env.SLACK_BOT_TOKEN,
-            types: "public_channel,private_channel"
-            });
-            const channels = conversationLists.channels;
-            channels.forEach(async(channelList) => {
-              try{
-              const channelIds = channelList.id;
-              const channelNames = channelList.name;
-               say(`<#${channelIds}|${channelNames}>\nhttps://app.slack.com/client/T05F5GD3ERG/${channelIds}`);
-              } catch(error){
-                console.log(chalk.red(error));
-              }
-        });
+          SlackGeneralFunction.listChannel(command.channel_id);
         });
 
       //Recommending youtube chanel function 
-    app.message(/recommend youtube learning English/i, async({message, say}) => {
-      await say(`Certainly, <@${message.user}>. Here's the list of recommended youtube channel for learning English.`);
-      SlackGeneralFunction.youtuberRecommend();
-    });
+      app.message(/recommend youtube learning English/i, async({message}) => {
+          SlackGeneralFunction.youtuberRecommend(message.user, message.channel);
+      });
+      
     //function that is easy to share content of other channel.
     app.message(/share (.+)/i, async({message, say}) => {
         const channelName = message.text.match(/share (.+)/i)[1];
