@@ -6,6 +6,7 @@ dotenv.config();
 
 import fs from 'node:fs';
 import readline from 'readline';
+import { otherFunction } from './meaning-teller-class.js';
 const rs = fs.createReadStream('./meaning-data.csv');
 const rl = readline.createInterface({ input: rs});
 const app = new bolt.App(
@@ -15,7 +16,8 @@ const app = new bolt.App(
     logLevel: 'debug' 
   });     
    
-  const meaningObject = {};//Object
+  const meaningObject = {};//definition-stored object
+  const SlackGeneralFunction = new otherFunction();  //creating instance
 
     
      rl.on('line', lineString => {
@@ -135,8 +137,6 @@ const app = new bolt.App(
       }); 
       });
       
-     
-
        //listing-channel function
        app.command('/listchannel', async({ack, say}) => {
           await ack();
@@ -159,10 +159,7 @@ const app = new bolt.App(
       //Recommending youtube chanel function 
     app.message(/recommend youtube learning English/i, async({message, say}) => {
       await say(`Certainly, <@${message.user}>. Here's the list of recommended youtube channel for learning English.`);
-      await say('<https://www.youtube.com/@Hapaeikaiwapage/videos|Hapa 英会話>');
-      await say("This youtube channel is only Japanese version, but I feel like this channel important to wether how you can use simple word a lot and with different way rather than whether can use new expression or word, so I recommend this channel for those who would like to revise learning method for scratch.");
-      await say('<https://www.youtube.com/channel/UCgeaC4OEk0t54m2hWQtjjIw|Atsueigo>');
-      await say("This channel is kind of channel that managing by people such a hardcore crowd of learning English, so it's extremely professional English and you can learn about learning-method. So if you want to learn more casually or with communication, it's unrecommendable. So I recommend this channel for those who want to learn English in your own country or who would like to plan your learning-method firmly.");
+      SlackGeneralFunction.youtuberRecommend();
     });
     //function that is easy to share content of other channel.
     app.message(/share (.+)/i, async({message, say}) => {
@@ -205,7 +202,6 @@ const app = new bolt.App(
         }
      });
     }
-    });          
-    
+    });  
     app.start();
      
