@@ -6,7 +6,7 @@ dotenv.config();
 
 import fs from 'node:fs';
 import readline from 'readline';
-import { otherFunction } from './meaning-teller-class.js';
+import { SlackOtherFunctions } from './meaning-teller-class.js';
 const rs = fs.createReadStream('./meaning-data.csv');
 const rl = readline.createInterface({ input: rs});
 const app = new bolt.App(
@@ -14,29 +14,31 @@ const app = new bolt.App(
     appToken: process.env.SLACK_APP_TOKEN, 
     socketMode: true, 
     logLevel: 'debug' 
-  });     
-   
-  const meaningObject = {};//definition-stored object
-  const SlackGeneralFunction = new otherFunction();  //creating instance
+  });
 
-    
+  const meaningObject = {}; //definition-stored object
+  const OtherFunctions = new SlackOtherFunctions();  //creating "SlackOtherFunctions" instance
+
      rl.on('line', lineString => {
-      const values = lineString.split(',');
-      const index = values[0];
-      const meaning = values[1];
-      const synonyms = values[2];
-      const URL = values[3];
-      // meaningObject[index] = {index: index, meaning: meaning, synonyms: synonyms, URL: URL};
-      meaningObject[index] = {index, meaning, synonyms, URL};
-      });
+        const values = lineString.split(',');
+        const index = values[0];
+        const meaning = values[1];
+        const synonyms = values[2];
+        const URL = values[3];
+        // meaningObject[index] = {index: index, meaning: meaning, synonyms: synonyms, URL: URL};
+        meaningObject[index] = {index, meaning, synonyms, URL}; 
+        });
+      
       rl.on('close', () => {
         app.message(/mea (.+)/i, async({message, say}) => {
-          const userInput = await message.text.match(/mea (.+)/i)[1];
-            await say(`Certainly <@${message.user}>, Here's meaning of *${meaningObject[userInput].index}*.`);  
-            await say(`*Meaning:* ${meaningObject[userInput].meaning}`);
-            await say(`*Synonyms:* ${meaningObject[userInput].synonyms}`);
-            await say(`*URL:* ${meaningObject[userInput].URL}`);
-          });   
+          const userInput = message.text.match(/mea (.+)/i)[1];
+          if(meaningObject[userInput].index === userInput) {
+           await say(`Certainly <@${message.user}>, Here's meaning of *${meaningObject[userInput].index}*.`);
+           await say(`*Meaning:* ${meaningObject[userInput].meaning}`);
+           await say(`*Synonyms:* ${meaningObject[userInput].synonyms}`);
+           await say(`*URL:* ${meaningObject[userInput].URL}`);
+          }                  
+        });  
     
        //create-meaning function
        let userInputWord; // A index and word of posted userInput.
@@ -52,13 +54,10 @@ const app = new bolt.App(
           if(userInput === index){
             say("Selected word is already existed!");
             return;
-          } if(userInput !== index){
+          } else{
            await say(`Please type in meaning, as in *"create meaning (type in here)"*.`);
            console.log(chalk.blue(userInput));
            userInputWord = userInput;
-          } else {
-            console.error(chalk.red(error));
-            return;
           }
         });
        app.message(/create meaning (.+)/i, async({message, say}) => {
@@ -135,60 +134,21 @@ const app = new bolt.App(
       console.log(`UpdatedURL: ${updateInput}`);
       meaningObject[updateIndex].URL = updateInput;
       }); 
-      });
-      
+    });      
        //listing-channel function
        app.command('/listchannel', async({ack, command}) => {
           await ack();
-          SlackGeneralFunction.listChannel(command.channel_id);
+          OtherFunctions.listChannel(command.channel_id);
         });
 
       //Recommending youtube chanel function 
       app.message(/recommend youtube learning English/i, async({message}) => {
-          SlackGeneralFunction.youtuberRecommend(message.user, message.channel);
+          OtherFunctions.youtuberRecommend(message.user, message.channel);
       });
       
     //function that is easy to share content of other channel.
-    app.message(/share (.+)/i, async({message, say}) => {
-        const channelName = message.text.match(/share (.+)/i)[1];
-        const postedBy = message.user;
-        const postedChannel = message.channel;
-        const conversationLists = await app.client.conversations.list({
-         token: process.env.SLACK_BOT_TOKEN,
-         types: "public_channel,private_channel"
-        });
-        const channels = conversationLists.channels;
-      try{
-        channels.forEach(async (channel) => {
-          if(channel.name === channelName) {
-            const channelId = channel.id;
-         const result = await app.client.conversations.history({
-            token: process.env.SLACK_BOT_TOKEN,
-            channel: channelId,
-            inclusive: true,
-            limit: 1
-          });
-          const message = result.messages[0].text;
-          console.log(chalk.blue(`ChannelId: ${channelId}`));
-          console.log(chalk.blue(`Latest message: ${message}`));
-          console.log(chalk.blue(`PostedBy: ${postedBy}`));
-          console.log(chalk.blue(`PostedChannel: ${postedChannel}`));
-          await say(`Here's latest message of <#${channelId}|${channel.name}> below.`);
-          await say(`*Latest message:* ${message}`);
-        }
-        });
-        
-    } catch(error) {
-      console.log(chalk.red(error));
-      await say("Latest Message couldn't find from the channel.");
-      await say('Access the channel below to make sure whether this chanel existed latest message or not.');
-      channels.forEach(async (channel) => {
-        if(channel.name === channelName) {
-          const channelId = channel.id;
-          await say(`<${channelId}|${channelName}>\nhttps://app.slack.com/client/T05F5GD3ERG/${channelId}`);
-        }
-     });
-    }
+    app.message(/share (.+)/i, async({message}) => {
+       OtherFunctions.contentShare(message);
     });  
     app.start();
      
