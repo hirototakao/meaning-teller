@@ -6,7 +6,7 @@
 
 - **"create mea"** This command will starts creation processing, and you can proceed creation process with message-prompted tutorial.
 
-# Updateing meaning 
+# Updating meaning 
 
 - **"update (word)"** This command will update meaning, synonyms and URL, which is linked with particular word. 
 
