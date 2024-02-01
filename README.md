@@ -4,7 +4,7 @@
 
 # Creating meaning
 
-- **"create mea"** This command will starts creation processing, and you can proceed creation with message-prompted tutorial.
+- **"create mea"** This command will starts creation processing, and you can proceed creation process with message-prompted tutorial.
 
 # Updateing meaning 
 
