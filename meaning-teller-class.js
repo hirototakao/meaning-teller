@@ -13,7 +13,6 @@ const app = new bolt.App(
   });     
 
   export class meaningTeller { // class for main functions
-    
   }
 
 export class SlackOtherFunctions { //class that is handles processing other than main function
@@ -96,7 +95,7 @@ export class SlackOtherFunctions { //class that is handles processing other than
       const channelId = channel.id;
       await app.client.chat.postMessage({
         channel: channelId,
-        text: `<${channelId}|${channelName}>\nhttps://app.slack.com/client/T05F5GD3ERG/${channelId}`
+        text: `<${channelId}|${channelName}>`
       });
     }
  });

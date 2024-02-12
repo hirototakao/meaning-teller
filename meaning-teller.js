@@ -32,33 +32,33 @@ const app = new bolt.App(
       rl.on('close', () => {
         app.message(/mea (.+)/i, async({message, say}) => {
           const userInput = message.text.match(/mea (.+)/i)[1];
-          if(meaningObject[userInput].index === userInput) {
+          if(meaningObject[userInput]) {
            await say(`Certainly <@${message.user}>, Here's meaning of *${meaningObject[userInput].index}*.`);
            await say(`*Meaning:* ${meaningObject[userInput].meaning}`);
            await say(`*Synonyms:* ${meaningObject[userInput].synonyms}`);
            await say(`*URL:* ${meaningObject[userInput].URL}`);
+          } if(meaningObject[userInput] !== userInput) {
+            say("There isn't any data for the word that you're asking the meaning.\nPlease create data of the word or searching its meaning online.");
+            console.log(chalk.red(`Error occured: ${userInput} is not found in the meaningObject.`));
+            return;
           }                  
         });  
-    
        //create-meaning function
        let userInputWord; // A index and word of posted userInput.
        let userInputMeaning; // A meaning of posted userInput.
        let userInputSynonyms; // A synonyms of posted userInput
-   
        app.message(/create mea/i, async({say}) => {
           say('Please type in word, as in *"create word (type in here)"*.');
        });
        app.message(/create word (.+)/i, async({message, say}) => {
           const userInput = message.text.match(/create word (.+)/i)[1];
-          const index = meaningObject[userInput].index;
-          if(userInput === index){
-            say("Selected word is already existed!");
+          if(meaningObject[userInput].index) {
+            say("Selected word is already existed! Please re-type in *create mea* to retry.");
             return;
-          } else{
-           await say(`Please type in meaning, as in *"create meaning (type in here)"*.`);
-           console.log(chalk.blue(userInput));
-           userInputWord = userInput;
-          }
+          } 
+          await say(`Please type in meaning, as in *"create meaning (type in here)"*.`);
+          console.log(chalk.blue(userInput));
+          userInputWord = userInput;
         });
        app.message(/create meaning (.+)/i, async({message, say}) => {
         const userInput = message.text.match(/create meaning (.+)/i)[1];
@@ -68,11 +68,16 @@ const app = new bolt.App(
        });
   
        app.message(/create synonyms (.+)/i, async({message, say}) => {
-          const userInput = message.text.match(/create synonyms (.+)/i)[1];
+        const userInput = message.text.match(/create synonyms (.+)/i)[1];
+        if(userInput === '') {
+          await say(`Please type in URL, as in *"create URL (type in here)"*.`);
+          console.log(chalk.blue('Not set'));
+          userInputSynonyms = 'Not set';
+        }
           await say(`Please type in URL, as in *"create URL (type in here)"*.`);
           console.log(chalk.blue(userInput));
           userInputSynonyms = userInput;
-       });
+        });
   
        app.message(/create synonyms/i, async({say}) => {
           await say(`Please type in URL, as in *"create URL (type in here)"*.`);
@@ -82,15 +87,15 @@ const app = new bolt.App(
   
        app.message(/create URL (.+)/i, async({message, say}) => {
           const userInputURL = message.text.match(/create URL (.+)/i)[1];
-          await say(`Meaning-creation processing has been completed successfully.🥳`);
           console.log(chalk.blue(userInputURL));
+          await say(`Meaning-creation processing has been completed successfully.🥳`);
           meaningObject[userInputWord] = {index: userInputWord, meaning: userInputMeaning, synonyms: userInputSynonyms, URL: userInputURL};
         });
        
       app.message(/create URL/i, async({say}) => {
         const userInputURL = 'Not set';
-        await say(`Meaning-creation processing has been completed successfully.🥳`);
         console.log(chalk.blue('Not set'));
+        await say(`Meaning-creation processing has been completed successfully.🥳`);
         meaningObject[userInputWord] = {index: userInputWord, meaning: userInputMeaning, synonyms: userInputSynonyms, URL: userInputURL};
       }); 
   
