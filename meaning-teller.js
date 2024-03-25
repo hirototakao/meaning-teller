@@ -12,29 +12,8 @@ const app = new bolt.App(
     appToken: process.env.SLACK_APP_TOKEN, 
     socketMode: true, 
     logLevel: 'debug' 
-  });     
-   
-  const meaningObject = {};//Object
+  });           
 
-  XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then( async(workbook) => {
-    
-   const sheet = workbook.sheet(0);
-
-    sheet.column("B").width(34);
-    sheet.column("C").width(13);
-    sheet.column("D").width(49);
-    sheet.cell("A1").value("Hello");
-    sheet.cell("B1").value("used when meeting or greeting someone:");
-    sheet.cell("C1").value("greet, greeting");
-    sheet.cell("D1").value("https://dictionary.cambridge.org/dictionary/english/hello");
-
-     return await workbook.toFileAsync("./meaning-teller.xlsx")
-  }).then(() => {
-    console.log("Excel file has been successfully written.");
-  }).catch(error => {
-    console.error(chalk.red("Error occurred:", error));
-  });
-    
       let userInputWord; // A index and word of posted userInput.
       let userInputMeaning; // A meaning of posted userInput.
       let userInputSynonyms; // A synonyms of posted userInput
@@ -42,10 +21,20 @@ const app = new bolt.App(
 
       app.message(/mea (.+)/i, async({message, say}) => {
         const userInput = await message.text.match(/mea (.+)/i)[1];
-          await say(`Certainly <@${message.user}>, Here's meaning of *${meaningObject[userInput].index}*.`);  
-          await say(`*Meaning:* ${meaningObject[userInput].meaning}`);
-          await say(`*Synonyms:* ${meaningObject[userInput].synonyms}`);
-          await say(`*URL:* ${meaningObject[userInput].URL}`);
+        XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then( async(workbook) => {
+          const sheet = workbook.sheet(0);
+          const retrievedValue = sheet.find(userInput)[0].address();
+          console.log(chalk.green(`Cell Address: ${retrievedValue}`));
+          if(retrievedValue !== undefined) {
+            const desiredValue = retrievedValue.slice(1);
+            await say(`Certainly <@${message.user}>, Here's meaning of *${sheet.cell(`A${desiredValue}`).value()}*.`);  
+            await say(`*Meaning:* ${sheet.cell(`B${desiredValue}`).value()}`);
+            await say(`*Synonyms:* ${sheet.cell(`C${desiredValue}`).value()}`);
+            await say(`*URL:* ${sheet.cell(`D${desiredValue}`).value()}`);
+          }
+        }).catch(error => {
+          console.error(chalk.red("Error occurred:", error));
+        });
         });   
   
      //create-meaning function
