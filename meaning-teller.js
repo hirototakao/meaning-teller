@@ -3,8 +3,8 @@ import bolt from '@slack/bolt';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
 import XlsxPopulate from "./node_modules/xlsx-populate/lib/XlsxPopulate.js";
+import { createMeaning } from './meaning-teller-class.js';
 import { returnChannelList } from './meaning-teller-class.js';
-import { contentShare } from './meaning-teller-class.js';
 dotenv.config();
 
 const app = new bolt.App(
@@ -37,90 +37,86 @@ const app = new bolt.App(
         });
         });   
   
-     //create-meaning function
-     app.message(/create mea/i, async({say}) => {
-        say('Please type in word, as in *"create word (type in here)"*.');
-     });
      app.message(/create word (.+)/i, async({message, say}) => {
         const userInput = message.text.match(/create word (.+)/i)[1];
-        if(userInput ===  meaningObject[userInput].index) {
-          say(`Selected word is already existed!`);
-          return;
-        } else {
-          await say(`Please type in meaning, as in *"create meaning (type in here)"*.`);
-          console.log(chalk.blue(userInput));
-          userInputWord = userInput;
-        }
+        XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then(async(workbook) => {
+          const sheet = workbook.sheet(0);
+          const retrievedValue = sheet.find(userInput)[0];
+          console.log(retrievedValue);
+          if(retrievedValue === undefined) {
+            await say(`Please type in meaning, as in *"create meaning (type in here)"*.`);
+            userInputWord = userInput;
+          }
+
+        });
       });
      app.message(/create meaning (.+)/i, async({message, say}) => {
       const userInput = message.text.match(/create meaning (.+)/i)[1];
       await say(`Please type in synonyms, as in *"create synonyms (type in here)"*.`);
-      console.log(chalk.blue(userInput));
       userInputMeaning = userInput; 
      });
 
      app.message(/create synonyms (.+)/i, async({message, say}) => {
         const userInput = message.text.match(/create synonyms (.+)/i)[1];
+        if(userInput === undefined || userInput === ""){
         await say(`Please type in URL, as in *"create URL (type in here)"*.`);
-        console.log(chalk.blue(userInput));
+        userInputSynonyms = 'Not set';            
+        }
+        await say(`Please type in URL, as in *"create URL (type in here)"*.`);
         userInputSynonyms = userInput;
-     });
-
-     app.message(/create synonyms/i, async({say}) => {
-        await say(`Please type in URL, as in *"create URL (type in here)"*.`);
-        console.log(chalk.blue('Not set'));
-        userInputSynonyms = 'Not set';
      });
 
       app.message(/create URL (.+)/i, async({message, say}) => {
         const userInputURL = message.text.match(/create URL (.+)/i)[1];
+        await createMeaning(userInputWord, userInputMeaning, userInputSynonyms, userInputURL);
         await say(`Meaning-creation processing has been completed successfully.🥳`);
-        console.log(chalk.blue(userInputURL));
-        meaningObject[userInputWord] = {index: userInputWord, meaning: userInputMeaning, synonyms: userInputSynonyms, URL: userInputURL};
       });
-     
-    app.message(/create URL/i, async({say}) => {
-      const userInputURL = 'Not set';
-      await say(`Meaning-creation processing has been completed successfully.🥳`);
-      console.log(chalk.blue('Not set'));
-      meaningObject[userInputWord] = {index: userInputWord, meaning: userInputMeaning, synonyms: userInputSynonyms, URL: userInputURL};
-    }); 
 
-    app.message(/update (.+)/i, async({message, say}) => {
-      const updateAt = message.text.match(/update (.+)/i)[1];
-        if(updateAt === meaningObject[updateIndex].index){
-          await say(`*Meaning:* ${meaningObject[updateAt].meaning}`);
-          await say(`*Synonyms:* ${meaningObject[updateAt].synonyms}`);
-          await say(`*URL:* ${meaningObject[updateAt].URL}`);
-          await say(`Please select to type in item name and detail that is would like to update in ${updateAt}, as in *"update (item name) (detail). "*.`);
-          updateIndex = updateAt;
-        } else {
-          say('Not found the selected word.');
-          return;
-        }
-   });
-   app.message(/update meaning (.+)/i, async({message, say}) => {
+  app.message(/update (.+)/i, async({message, say}) => {
+    const userInput = message.text.match(/update (.+)/i)[1];
+    console.log(chalk.blue(`User message: ${userInput}`));
+    const workbook = await XlsxPopulate.fromFileAsync("./meaning-teller.xlsx");
+      const sheet = workbook.sheet(0);
+      updateIndex = sheet.find(userInput)[0].address().slice(1);
+      console.log(chalk.green(`Row number: ${updateIndex}`));
+        await say(`Certainly <@${message.user}>, Please check data of selected word "*${sheet.cell(`A${updateIndex}`).value()}*".`);  
+        await say(`*Meaning:* ${sheet.cell(`B${updateIndex}`).value()}`);
+        await say(`*Synonyms:* ${sheet.cell(`C${updateIndex}`).value()}`);
+        await say(`*URL:* ${sheet.cell(`D${updateIndex}`).value()}`);
+        await say(`Please select to type in item name and detail that is would like to update in frame, as in "*update (item name) (detail)*".`)
+  });
+
+  app.message(/update meaning (.+)/i, async({message, say}) => {
     const updateInput = await message.text.match(/update meaning (.+)/i)[1];
-    await say(`It successfully updated meaning.😍 Please make sure whether enabled you to check same meaning or not.`);
-    console.log(`UpdatedMeaning: ${updateInput}`);
-    meaningObject[updateIndex].meaning = updateInput;
-    }); 
+    console.log(chalk.green(`User message: ${updateInput}`));
+    XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then( async(workbook) => {
+      const replaceValue = await workbook.sheet(0).cell(`B${updateIndex}`).value();
+      console.log(chalk.green(replaceValue));
+      await workbook.sheet(0).find(replaceValue, updateInput);
+      await say(`It successfully updated meaning.😍 Please try to make sure whether it successfully updated or not if you want.`);
+      return workbook.toFileAsync("./meaning-teller.xlsx");
+    });
+  });
 
   app.message(/update synonyms (.+)/i, async({message, say}) => {
     const updateInput = await message.text.match(/update synonyms (.+)/i)[1];
-    await say(`It successfully updated meaning.😍 Please make sure whether enabled you to check same synonyms or not.`);
-    console.log(`UpdatedSynonyms: ${updateInput}`);
-    meaningObject[updateIndex].synonyms = updateInput;
-    }); 
+    XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then( async(workbook) => {
+      const replaceValue = await workbook.sheet(0).cell(`C${updateIndex}`).value();
+      await workbook.sheet(0).find(replaceValue, updateInput);
+      await say(`It successfully updated synonyms.😍 Please try to make sure whether it successfully updated or not if you want.`);
+      return workbook.toFileAsync("./meaning-teller.xlsx");
+    });
+  });
 
   app.message(/update URL (.+)/i, async({message, say}) => {
     const updateInput = await message.text.match(/update URL (.+)/i)[1];
-    await say(`It successfully updated meaning.😍 Please make sure whether enabled you to check same URL or not.`);
-    console.log(`UpdatedURL: ${updateInput}`);
-    meaningObject[updateIndex].URL = updateInput;
-    }); 
-      
-     
+    XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then( async(workbook) => {
+      const replaceValue = await workbook.sheet(0).cell(`D${updateIndex}`).value();
+      await workbook.sheet(0).find(replaceValue, updateInput);
+      await say(`It successfully updated URL.😍 Please try to make sure whether it successfully updated or not if you want.`);
+      return workbook.toFileAsync("./meaning-teller.xlsx");
+    });
+  });
 
        //listing-channel function
        app.command('/listchannel', async({ack, say}) => {
@@ -167,12 +163,12 @@ const app = new bolt.App(
             limit: 1
           });
           const message = result.messages[0].text;
+          await say(`Here's latest message of <#${channelId}|${channel.name}> below.`);
+          await say(`*Latest message:* ${message}`);
           console.log(chalk.blue(`ChannelId: ${channelId}`));
           console.log(chalk.blue(`Latest message: ${message}`));
           console.log(chalk.blue(`PostedBy: ${postedBy}`));
           console.log(chalk.blue(`PostedChannel: ${postedChannel}`));
-          await say(`Here's latest message of <#${channelId}|${channel.name}> below.`);
-          await say(`*Latest message:* ${message}`);
         }
         });
         
