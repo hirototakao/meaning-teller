@@ -11,7 +11,7 @@
 
 - **"update word (word)"** A command that updates data in given word. 
 
-- If you getting used to above 3 main command, you'll manipulate this Slack bot application.
+- If you getting used to above 3 main command, you'll manipulate this Slack bot application freely.
 
 # Other function
 
