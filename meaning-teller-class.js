@@ -3,6 +3,7 @@
 import bolt from '@slack/bolt';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
+import puppeteer from "puppeteer";
 import XlsxPopulate from "./node_modules/xlsx-populate/lib/XlsxPopulate.js";
 dotenv.config();
 
@@ -13,7 +14,7 @@ const app = new bolt.App(
     logLevel: 'debug' 
   });     
   
-  async function creatingData(userInputWord, userInputMeaning, userInputSynonyms, userInputURL) {
+  export async function creatingData(userInputWord, userInputMeaning, userInputSynonyms, userInputURL) {
     XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then( async(workbook) => {
       const sheet = workbook.sheet(0);
       const EndOfUsedValue = workbook.sheet(0).usedRange().address().slice(4);
@@ -52,3 +53,44 @@ export async function returnChannelList(callback) {
   });
   callback(conversationLists.channels);
   } 
+
+  export async function scrape_data_from_Online(word) {
+
+    const browser = await puppeteer.launch();
+
+    const page = await browser.newPage();
+    
+    const meaningUrl = `https://dictionary.cambridge.org/dictionary/english/${word}`;
+    
+    const synonymUrl = `https://dictionary.cambridge.org/thesaurus/${word}`;
+    
+    await page.goto(meaningUrl);
+    const selectors = ["article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense.dsense-noh .sense-body.dsense_b .def-block.ddef_block. .ddef_h .def.ddef_d.db", 
+                       "article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense. .sense-body.dsense_b .def-block.ddef_block. .ddef_h .def.ddef_d.db",
+                       "article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense. .sense-body.dsense_b .def-block.ddef_block. .hflxrev.hdf-xs.hdb-s.hdf-l .hflx1 .ddef_h .def.ddef_d.db"];    
+    
+    let text_Content;
+    let meaning;
+    for(let i = 0; i <= selectors.length; i++){
+      try {
+        text_Content = await page.$eval(selectors[i], el => el);
+        if(text_Content !== undefined || text_Content !== null || error === null) {
+          meaning = text_Content.textContent;
+          console.log(chalk.blue("Meaning:", meaning));
+          break;
+        }
+      } catch(error) {
+        continue;
+      }  
+    }
+    
+    await page.goto(synonymUrl);
+       
+    const synonyms = await page.$$eval("a span.dx-h.dthesButton.synonym", el => {
+       return `${el[0].innerText}, ${el[1].innerText, el[2].innerText}, ${el[3].innerText}, ${el[4].innerText}`;
+    });
+    await browser.close();
+    
+    const meaningData = {meaning, synonyms, meaningUrl};
+    return meaningData;
+  }

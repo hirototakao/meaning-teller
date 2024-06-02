@@ -3,10 +3,12 @@ import bolt from '@slack/bolt';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
 import XlsxPopulate from "./node_modules/xlsx-populate/lib/XlsxPopulate.js";
+import puppeteer from "puppeteer";
+import { scrape_data_from_Online } from "./meaning-teller-class.js";
 import { createMeaning } from './meaning-teller-class.js';
+import { creatingData } from "./meaning-teller-class.js";
 import { returnChannelList } from './meaning-teller-class.js';
 dotenv.config();
-
 const app = new bolt.App(
   { token: process.env.SLACK_BOT_TOKEN, 
     appToken: process.env.SLACK_APP_TOKEN, 
@@ -23,15 +25,31 @@ const app = new bolt.App(
         const userInput = await message.text.match(/mea (.+)/i)[1];
         XlsxPopulate.fromFileAsync("./meaning-teller.xlsx").then( async(workbook) => {
           const sheet = workbook.sheet(0);
-          const retrievedValue = sheet.find(userInput)[0].address();
+          const retrievedValue = sheet.find(userInput)[0];
           console.log(chalk.green(`Cell Address: ${retrievedValue}`));
-          if(retrievedValue !== undefined) {
-            const desiredValue = retrievedValue.slice(1);
+          try {
+            const desiredValue = retrievedValue.address().slice(1);
+            console.log(desiredValue);
             await say(`Certainly <@${message.user}>, Here's meaning of *${sheet.cell(`A${desiredValue}`).value()}*.`);  
             await say(`*Meaning:* ${sheet.cell(`B${desiredValue}`).value()}`);
             await say(`*Synonyms:* ${sheet.cell(`C${desiredValue}`).value()}`);
             await say(`*URL:* ${sheet.cell(`D${desiredValue}`).value()}`);
+          } catch(error) {
+            //If there is no precisely matched word.
+            console.error(chalk.red(error));
+            await say("It's auto-generating meaning of the word...");
+            const scrapingResult = await scrape_data_from_Online(userInput);
+            if(scrapingResult === null) {
+              say("It failed to auto-generate the meaning of the word. Please try again, or please create the meaning of the word if possible.");
+              return;
+            } 
+            await say(`Certainly, <@${message.user}>, Here're meaning of *${userInput}*.`);
+            await say(`*Meaning:* ${scrapingResult.meaning}`);
+            await say(`*Synonyms:* ${scrapingResult.synonyms}`);
+            await say(`*URL:* ${scrapingResult.meaningUrl}`);
+            creatingData(userInput, scrapingResult.meaning, scrapingResult.synonyms, scrapingResult.meaningUrl);
           }
+
         }).catch(error => {
           console.error(chalk.red("Error occurred:", error));
         });
@@ -77,7 +95,7 @@ const app = new bolt.App(
     console.log(chalk.blue(`User message: ${userInput}`));
     const workbook = await XlsxPopulate.fromFileAsync("./meaning-teller.xlsx");
       const sheet = workbook.sheet(0);
-      updateIndex = sheet.find(userInput)[0].address().slice(1);
+      updateIndex = await sheet.find(userInput)[0].address().slice(1);
       console.log(chalk.green(`Row number: ${updateIndex}`));
         await say(`Certainly <@${message.user}>, Please check data of selected word "*${sheet.cell(`A${updateIndex}`).value()}*".`);  
         await say(`*Meaning:* ${sheet.cell(`B${updateIndex}`).value()}`);
