@@ -64,22 +64,22 @@ export async function returnChannelList(callback) {
     
     const synonymUrl = `https://dictionary.cambridge.org/thesaurus/${word}`;
     
-    await page.goto(meaningUrl);
     const selectors = ["article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense.dsense-noh .sense-body.dsense_b .def-block.ddef_block. .ddef_h .def.ddef_d.db", 
-                       "article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense. .sense-body.dsense_b .def-block.ddef_block. .ddef_h .def.ddef_d.db",
-                       "article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense. .sense-body.dsense_b .def-block.ddef_block. .hflxrev.hdf-xs.hdb-s.hdf-l .hflx1 .ddef_h .def.ddef_d.db"];    
+                       "article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense .sense-body.dsense_b .def-block.ddef_block .ddef_h .def.ddef_d.db",
+                       "article#page-content .page .pr.dictionary .link .pr.di.superentry .di-body .entry .entry-body .pr.entry-body__el .pos-body .pr.dsense. .sense-body.dsense_b .def-block.ddef_block .hflxrev.hdf-xs.hdb-s.hdf-l .hflx1 .ddef_h .def.ddef_d.db"];    
     
-    let text_Content;
-    let meaning;
-    for(let i = 0; i <= selectors.length; i++){
+    try {
+    let meaning = null;
+    for(let selector of selectors){
       try {
-        text_Content = await page.$eval(selectors[i], el => el);
-        if(text_Content !== undefined || text_Content !== null || error === null) {
-          meaning = text_Content.textContent;
+        const text_Content = await page.$eval(selector, el => el.textContent);
+        if(text_Content) {
+          meaning = text_Content;
           console.log(chalk.blue("Meaning:", meaning));
           break;
         }
       } catch(error) {
+        meaning = "Not set";
         continue;
       }  
     }
@@ -93,4 +93,8 @@ export async function returnChannelList(callback) {
     
     const meaningData = {meaning, synonyms, meaningUrl};
     return meaningData;
+  } catch(error) {
+    console.error(chalk.red("An error occurred:", error));
+    throw error;
   }
+}
