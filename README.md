@@ -1,20 +1,20 @@
-# Asking meaning
+# Asking Meaning
 
-- **"mea (word)"** A command that retrieves the meaning of given word.
+- **"mea (word)"** retrieve the meaning of given word.
 
-# Creating meaning
+# Creating Meaning
 
-- **"create mea"** A command that creates meaning of word, and you can proceed creation process with tutorial that provides by the bot.
+- **"create mea"** create meaning of word, and you can proceed the creation process with tutorial provided by the bot.
 
 
-# Updating meaning 
+# Updating Meaning 
 
-- **"update word (word)"** A command that updates data in given word. 
+- **"update word (word)"** update data in the given word. 
 
-- If you getting used to above 3 main command, you'll manipulate this Slack bot application freely.
+- If you getting used to the above 3 command, you would definitely be able to manipulate this bot.
 
-# Other function
+# Other Function
 
-- **"/listchannel"** A slash command that shows you the list of formatted channelinks with its browser links.
+- **"/listchannel"** list all channel links and its browser links in a workspace.
 
-- **"share (channel name)"** A command that enables you to share content of other channel by sharing the latest message in the channel.
+- **"share (channel name)"** share latest content of other channels
