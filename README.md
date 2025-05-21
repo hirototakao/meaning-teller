@@ -17,5 +17,4 @@
 
 - **"/listchannel"** list all channel links and its browser links in a workspace.
 
-- **"share (channel name)"** share latest content of other channel
-# meaning-teller
+- **"share (channel name)"** share latest content of other channels
